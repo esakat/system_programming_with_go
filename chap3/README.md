@@ -137,6 +137,7 @@ Go言語では多くの構造体がio.Writerとio.Reader両方を満たしてい
 |:---:|:-----------:|:-----------:|:-----------:|:-----------:|
 | os.Stdin | ○ |   |   | ○ |
 | os.File  | ○ | ○ | ○ | ○ |
+
 ### 標準入力(os.Stdin)
 
 標準入力に対応するオブジェクトが`os.Stdin`<br/>
@@ -182,3 +183,41 @@ Goでは並列処理がうまく扱えるため、それを使ってノンブロ
 具体的にはgoroutineとチャネルで実現する
 
 
+### ファイル入力(os.File)
+
+ファイルからの入力は`os.File`を利用する<br />
+ファイルの新規作成は`os.Create()`を使用する。`os.Open()`を使うと既存のファイルを開ける<br >
+この2つの処理は内部的には同じ、`os.OpenFile()`という関数のフラグ違いエイリアスで、同じシステムコールが呼ばれている
+
+```Go
+func Open(name string) (*File, error) {
+  return OpenFile(name, O_RDONLY, 0)
+}
+
+func Create(name string) (*File, error) {
+  return OpenFile(name, O_RDWR|O_CREATE|O_TRUNC, 0666)
+}
+```
+
+`io.Copy()`を使って標準出力にファイルの内容を書きだし
+
+```Go
+package main
+
+import (
+	"io"
+	"os"
+)
+
+func main() {
+	file, err := os.Open("main.go")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	io.Copy(os.Stdout, file)
+}
+```
+
+`defer`は`確実に行う後処理`を実行してくれる機能<br>
+`defer XXXXXXX`は現在のスコープが終了したら、`XXXXXXX`処理を実行する
