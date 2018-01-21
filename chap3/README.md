@@ -124,3 +124,61 @@ import "bufio"
 
 var readWriter io.ReadWriter = bufio.NewReadWriter(reader, writer)
 ```
+
+## よく使われるio.Readerを満たす構造体
+
+```memo
+<memo>
+Go言語では多くの構造体がio.Writerとio.Reader両方を満たしているので
+それぞれ用意する必要はほとんどないよ
+```
+
+| var | *io.Reader* | *io.Writer* | *io.Seeker* | *io.Closer* |
+|:---:|:-----------:|:-----------:|:-----------:|:-----------:|
+| os.Stdin | ○ |   |   | ○ |
+| os.File  | ○ | ○ | ○ | ○ |
+### 標準入力(os.Stdin)
+
+標準入力に対応するオブジェクトが`os.Stdin`<br/>
+このプログラムを実行すると入力待ちになり、Enterを押すたびに、結果が返ってくる
+
+```Go
+package main
+
+import (
+  "os"
+  "fmt"
+  "io"
+)
+
+func main() {
+  for {
+    buffer := make([]byte, 5)
+    size, err := os.Stdin.Read(buffer)
+    if err == io.EOF {
+      fmt.Println("EOF")
+      break
+    }
+    fmt.Printf("size=%d input='%s'\n", size, string(buffer))
+  }
+}
+
+/* 
+結果
+$ go run main.go
+fsafasf
+size=5 input='fsafa'
+size=3 input='sf
+'
+改行が変になる
+*/
+```
+
+通常で実行すると、入力待ちでブロックしてしまう<br />
+Go言語の`Read()`にはタイムアウトの仕組みがないため、このブロックは避けられない
+
+他の言語だと、ノンブロッキング用APIとブロックするAPIが用意されていることが多いが<br />
+Goでは並列処理がうまく扱えるため、それを使ってノンブロッキングな処理を実現する<br />
+具体的にはgoroutineとチャネルで実現する
+
+
