@@ -133,11 +133,14 @@ Go言語では多くの構造体がio.Writerとio.Reader両方を満たしてい
 それぞれ用意する必要はほとんどないよ
 ```
 
-| var | *io.Reader* | *io.Writer* | *io.Seeker* | *io.Closer* |
-|:---:|:-----------:|:-----------:|:-----------:|:-----------:|
-| os.Stdin | ○ |   |   | ○ |
-| os.File  | ○ | ○ | ○ | ○ |
-| net.Conn | ○ | ○ |   | ○ |
+| var | *io.Reader* | *io.Writer* | *io.Seeker* | *io.Closer* | *io.ReaderAt* |
+|:---:|:-----------:|:-----------:|:-----------:|:-----------:|:-------------:|
+| os.Stdin | ○ |   |   | ○ |   |
+| os.File  | ○ | ○ | ○ | ○ |   |
+| net.Conn | ○ | ○ |   | ○ |   |
+| bytes.Buffer | ○ | ○ |   |   |   |
+| bytes.Reader  | ○ |   | ○ |   | ○ |
+| strings.Reader | ○ |   | ○ |   | ○ |
 
 ### 標準入力(os.Stdin)
 
@@ -290,3 +293,23 @@ map[Content-Type:[text/html] X-Frame-Options:[SAMEORIGIN] X-Ua-Compatible:[IE=ed
 </html>
 */
 ```
+
+### メモリに蓄えた内容を読み込むバッファ
+
+バッファは書き込みだけでなく読み込みにも使えるよってこと(`bytes.Buffer`)<br>
+他に`bytes.Reader`と`strings.Reader`があるけど、ほとんどのケースで使い分けないので、`bytes.Buffer`さえ覚えておけばおk<br>
+(これらが使われるのバイナリ解析用くらい)
+
+バッファの初期化はいくつかやり方がある、初期データあるか,初期データの型は？
+
+```Go
+// 空バッファ
+var buffer1 bytes.Buffer
+// バイト列で初期化
+buffer2 := bytes.NewBuffer([]byte{0x10, 0x20, 0x30})
+// 文字列で初期化
+buffer3 := bytes.NewBufferString("初期文字列")
+```
+
+一番上の空バッファの初期化だけは、ポインタではなく、実体なので`io.Writer`などに渡す際は`&buffer1`のようにポインタ値を渡す必要がある
+
