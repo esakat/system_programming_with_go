@@ -137,6 +137,7 @@ Go言語では多くの構造体がio.Writerとio.Reader両方を満たしてい
 |:---:|:-----------:|:-----------:|:-----------:|:-----------:|
 | os.Stdin | ○ |   |   | ○ |
 | os.File  | ○ | ○ | ○ | ○ |
+| net.Conn | ○ | ○ |   | ○ |
 
 ### 標準入力(os.Stdin)
 
@@ -221,3 +222,71 @@ func main() {
 
 `defer`は`確実に行う後処理`を実行してくれる機能<br>
 `defer XXXXXXX`は現在のスコープが終了したら、`XXXXXXX`処理を実行する
+
+### ネットワーク通信の読み込み(net.Conn)
+
+ネットワーク経由のやり取りは、送信データを送信者側から見ると、書き込みで<br>
+受信者から見ると読み込みになる
+
+前章で書いた処理も受信者からすると、読み込みになる
+
+```Go
+package main
+
+import (
+	"io"
+	"net"
+	"os"
+)
+
+func main() {
+	conn, err := net.Dial("tcp", "ascii.jp:80")
+	if err != nil {
+		panic(err)
+	}
+	conn.Write([]byte("GET / HTTP/1.0\r\nHost: ascii.jp\r\n\r\n"))
+	io.Copy(os.Stdout, conn)
+}
+```
+
+`net.Dial()`で返される`conn`が`net.Conn`型でこれを`io.Copy`を使って、標準出力に渡している<br>
+これはシンプルだが、毎回HTTPの取得結果をRFCにしたがってパースするのは大変<br>
+Go言語では、HTTPレスポンスをパースする、`http.ReadResponse()`がある<br>
+この関数に`bufio,Reader`でラップした、`net.Conn`を渡すと、http.Response構造体のデータが返される
+
+```Go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"os"
+)
+
+func main() {
+	conn, err := net.Dial("tcp", "ascii.jp:80")
+	if err != nil {
+		panic(err)
+	}
+	conn.Write([]byte("GET / HTTP1.0\r\nHost: ascii.jp\r\n\r\n"))
+	res, err := http.ReadResponse(bufio.NewReader(conn), nil)
+	// ヘッダーを表示
+	fmt.Println(res.Header)
+	// ボディを表示
+	defer res.Body.Close()
+	io.Copy(os.Stdout, res.Body)
+}
+
+/*
+実行結果
+map[Content-Type:[text/html] X-Frame-Options:[SAMEORIGIN] X-Ua-Compatible:[IE=edge;IE=11;IE=10;IE=9] Content-Length:[135] Date:[Sun, 21 Jan 2018 23:35:54 GMT] Server:[Apache] Expires:[0]]
+<html>
+<head>
+<meta http-equiv='refresh' content='1; url=http://ascii.jp/&arubalp=e95690d3-ceae-4a5a-a976-5065e0a815'>
+</head>
+</html>
+*/
+```
