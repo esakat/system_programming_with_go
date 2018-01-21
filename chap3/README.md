@@ -53,4 +53,74 @@ buffer := make([]byte, 4)
 size, err := io.ReadFull(reader, buffer)
 ```
 
+### io.Copy()
 
+`io.Reader`から`io.Writer`にそのままデータを渡したいときはコピー系の補助関数を利用する<br />
+`io.Copy()`ではすべてを読み込んで書き込む(ファイルを開いてHTTP転送や、ハッシュ計算も可能)<br />
+指定したバイト数のみ読み込む場合は`io.CopyN()`が使える
+
+```Go
+// すべてコピー
+writeSize, err := io.Copy(writer, reader)
+// 指定したサイズのみをコピー
+writeSize, err := io.CopyN(writer, reader, size)
+```
+
+### io.CopuBuffer()
+
+あらかじめコピーする量が決まっていて、バッファを使いまわしたい場合に利用する<br />
+`io.Copy()`はデフォだと、32KBのバッファを確保している
+
+```Go
+// 8kbのバッファを利用
+buffer := make([]byte, 8 * 1024)
+io.CopyBuffer(writer, reader, buffer)
+```
+
+## io.Writer,io.Reader以外の入出力インタフェース
+
+読み書き以外にもクローズ処理など様々な処理が必要<br />
+以下のようなものがあるよ
+
+* io.Closerインタフェース
+  * `func Close() error`メソッドを持つ
+  * 使用し終えたファイルを閉じる
+* io.Seekerインタフェース
+  * `func Seek(offset int64, whence int) (int64, error)`メソッドを持つ
+  * 読み書き位置を移動する
+* io.ReaderAtインタフェース
+  * `func ReadAt(p []byte, off int64) (n int, err error)`メソッドを持つ
+  * 対象となるオブジェクトがランダムアクセスを行える場合に、好きな位置を自由にアクセスする際に使用する
+
+## 入出力の複合インタフェース
+
+`io.Closer`や`io.Seeker`だけを満たした、構造体を扱うことはほとんどない<br />
+`io.Writer`などを組合わせた複合インタフェースがほとんど
+
+例えば,`io.ReadWriter`は`io.Reader`と`io.Writer`を満たしている必要がある
+
+### 複合インタフェースのキャスト
+
+`io.ReadWriter`が要求されているが`io.Reader`を満たしていない場合がある<br />
+例えば、ソケット読み込み関数を作成中に、引数は`io.ReadCloser`だが<br />
+ユニットテスト用に、`io.Reader`インタフェースを満たすものが使いたいケースがある<br />
+その場合は`ioutil.NopCloser()`を使うと、ダミーの`Close()`を持って`io.ReadCloser`のふりをするラッパーオブジェクトが得られる
+
+```Go
+import (
+  "io"
+  "io/ioutil"
+  "strings"
+)
+
+var reader io.Reader = strings.NewReader("テストデータ")
+var readCloser io.ReadCloser = ioutil.NopCloser(reader)
+```
+
+`bufio.NewReadWriter()`を使うと`io.Reader`と`io.Writer`を繋げて、`io.ReadWriter`型のオブジェクトを作れる
+
+```Go
+import "bufio"
+
+var readWriter io.ReadWriter = bufio.NewReadWriter(reader, writer)
+```
