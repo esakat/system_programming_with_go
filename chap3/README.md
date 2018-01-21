@@ -28,4 +28,29 @@ size, err := r.Read(buffer)
 これだと毎回バッファを作成して、読み込みのたびに引数を指定する必要があるが、不便
 Go言語では補助の機能が豊富に提供されている
 
+## io.Readerの補助関数
+
+PythonやRubyではfileオブジェクトが補助関数を持ったりするけど<br />
+Goの場合は例外を除き、外部のヘルパー関数を利用する
+
+### ioutil.ReadAll()
+
+終端記号が来るまで、すべてのデータを読み込んで返す<br />
+メモリに収まりきらない場合を除いて、基本的にこれでいける
+
+```Go
+buffer, err := ioutil.ReadAll(reader)
+```
+
+### io.ReadFull()
+
+決まったバイト数だけ読み込みたい場合に利用<br />
+これを使うと指定したサイズ分まで読み込めない場合はエラーが返ってくる
+
+```Go
+// 4バイト読み込めないとエラーになる
+buffer := make([]byte, 4)
+size, err := io.ReadFull(reader, buffer)
+```
+
 
