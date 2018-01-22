@@ -377,3 +377,21 @@ func main() {
   fmt.Printf("data: %d\n", i)
 }
 ```
+
+### PNGファイルの分析
+
+PNGファイルはバイナリフォーマットで先頭８バイトはシグニチャ(固定バイト列)  
+それ以降はチャンクで構成されている
+
+各チャンクと、その長さを列挙して見る  
+読み込み用データは[これ](https://en.wikipedia.org/wiki/File:Lenna.png)を使用  
+![これ](https://upload.wikimedia.org/wikipedia/en/2/24/Lenna.png)
+
+コードは`png_parse`ディレクトリを参照
+
+Go言語では配列に要素を追加するには  
+```Go
+array = append(array, elemet)
+```
+
+とする、多くのオブジェクト言語と違い、配列やスライス自体にメソッドを持たない
