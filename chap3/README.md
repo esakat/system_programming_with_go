@@ -313,3 +313,40 @@ buffer3 := bytes.NewBufferString("初期文字列")
 
 一番上の空バッファの初期化だけは、ポインタではなく、実体なので`io.Writer`などに渡す際は`&buffer1`のようにポインタ値を渡す必要がある
 
+## バイナリ解析関連
+
+バイナリデータを読み込む時に必要な機能を紹介から
+
+### 必要な部位を切り出す(io.LimiReader / io.SectionReader)
+
+ファイルを先頭から必要なとこまでだけ読み込みたいという場合の方法
+(ヘッダー領域を読み込むような)
+
+```Go
+// たくさんデータがあっても先頭16バイトしか読み込まない
+lReader := io.LimitReader(reader, 16)
+```
+
+長さだけでなく、スタート位置も固定したい場合がある  
+PNGファイルなど、データがいくつかのチャンク(データの塊)に別れている場合  
+チャンク毎にReaderを用意して読み込めれば、コードの独立性が高まる  
+
+その時に便利なのが、`io.SectionReader`  
+これは`io.Reader`が使えず、代わりに`io.ReaderAt`を使う
+
+```Go
+package main
+
+import (
+  "os"
+  "io"
+  "strings"
+)
+
+func main() {
+  // 文字列からSectionの部分だけを切り出したReaderを作成し、それをos.Stdoutで書きだしている
+  reader := strings.NewReader("Example of io.SectionReader\n")
+  sectionReader := io.NewSectionReader(reader, 14, 7)
+  io.Copy(os.Stdout, sectionReader)
+}
+```
