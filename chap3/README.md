@@ -26,6 +26,10 @@
     - [データ型を指定して解析](#データ型を指定して解析)
     - [その他の決まった形式のフォーマット文字列の解析](#その他の決まった形式のフォーマット文字列の解析)
   - [ストリームを扱う](#ストリームを扱う)
+    - [io.MultiReader](#iomultireader)
+    - [io.TeeReader](#ioteereader)
+    - [io.Pipe](#iopipe)
+  - [まとめ](#まとめ)
 
 <!-- /TOC -->
 
@@ -462,3 +466,70 @@ Go言語は型情報をデータが持っているので、`%v`と書いてお�
 `encoding`パッケージを使えば、決まった形式の文字列も扱える(例えばcsvとか)
 
 ## ストリームを扱う
+
+多言語では、定義されたインタフェースを使ったデータ入出力機構を`ストリーム`と呼ぶ  
+Go言語ではストリームとは呼ばないが、io.Reader/Writerをデータが流れるパイプとして扱える
+
+### io.MultiReader
+
+引数で渡された`io.Reader`が全て繋がっているように動作する
+
+```Go
+func main() {
+	header := bytes.NewBufferString("-----HEADER-----\n")
+	content := bytes.NewBufferString("Example of io.MultiReader\n")
+	footer := bytes.NewBufferString("-----FOOTER-----\n")
+
+	reader := io.MultiReader(header, content, footer)
+	// 全てのreaderを繋げて表示
+	io.Copy(os.Stdout, reader)
+}
+```
+
+実行結果
+```
+$ go run main.go
+-----HEADER-----
+Example of io.MultiReader
+-----FOOTER-----
+```
+
+### io.TeeReader
+
+読み込んだ内容を別のio.Writerに書き出す 
+この例では別のwriterとして、bufferを用意し、そちらにも書き込んでいたため  
+データを破棄した後もbufferから読み込めてる
+
+これを使うとクライアントからの入力と標準出力のログ表示を両立できる
+
+```Go
+func main() {
+	var buffer bytes.Buffer
+	reader := bytes.NewBufferString("Example of io.TeeReader\n")
+	teeReader := io.TeeReader(reader, &buffer)
+	// データを読み捨てる
+	_, _ = ioutil.ReadAll(teeReader)
+
+	// バッファには残っている
+	fmt.Println(buffer.String())
+}
+```
+
+結果
+```
+$ go run main.go
+Example of io.TeeReader
+
+```
+
+### io.Pipe
+
+`io.Pipe`を使うと、`io.PipeReader`,`io.PipeWriter`のペアが得られる  
+Writerに書き込んだものがReaderに出力される
+
+これは同期的なやりとりしか使えない  
+(ReaderがRead()すると、誰かがWrite()するまで、ブロックされる。。逆も然り)
+
+## まとめ
+
+io.Readerを勉強した
