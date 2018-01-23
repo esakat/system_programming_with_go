@@ -407,4 +407,25 @@ PNG画像にはテキストを追加する`tEXt`というチャンクがある(�
 
 テキスト解析ではバイナリのようにデータサイズが固定ではないため、探索しながら読み込み
 
-### 改行/単語で区切り
+## データ型を指定して解析
+
+`io.Reader`から読み込んだデータを整数や浮動小数点に変換するには`fmt.Fscan()`を使う  
+これを使うと、任意のデータ区切りをフォーマット文字列として指定できる
+
+```Go
+var source = "123 1.234 1.0e4 test"
+
+func main() {
+	reader := strings.NewReader(source)
+	var i int
+	var f, g float64
+	var s string
+	fmt.Fscan(reader, &i, &f, &g, &s)
+	fmt.Printf("i=%#v f=%#v g=%#v s=%#v\n", i, f, g, s)
+}
+```
+
+Go言語は型情報をデータが持っているので、`%v`と書いておけば、変数の型を読み取って変換してくれる。
+
+
+
