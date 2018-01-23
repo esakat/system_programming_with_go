@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 )
@@ -21,7 +22,14 @@ func main() {
 	}
 	defer newfile.Close()
 
-	io.Copy(newfile, oldfile)
+	buffer := make([]byte, 5)
+	_, err := os.Stdin.Read(buffer)
+	if err == io.EOF {
+		fmt.Println("EOF")
+		break
+	}
+
+	io.Copy(newfile, string(buffer))
 }
 
 /*
