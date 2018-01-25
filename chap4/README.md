@@ -79,3 +79,46 @@ task, ok := <-tasks
 読み込みは基本的に送信側が送信されるまでブロックされる、これを避けるには`select`を使う
 
 チャネルを閉じる場合は`Close(チャネル)`を呼び出す
+
+チャネルを閉じると、そのチャネルを使っているループが終了する
+
+読み込みではデフォルト値(数値なら`0`, 文字列なら`空文字`)が返ってくるようになる  
+送信しようとするpanicが発生する
+
+### イベント通知としてのチャネル
+
+```Go
+func main() {
+	fmt.Println("start sub()")
+	// 終了を受け取るためのチャネル
+	done := make(chan bool)
+	go func() {
+		fmt.Println("sub() is finished")
+		// 終了を通知
+		done <- true
+	}()
+	<-done
+	fmt.Println("all tasks are finished")
+}
+```
+
+`<-done`の受信部で終了通知送信を受け取らないとデッドロックが発生する
+
+```
+$ go run main.go
+start sub()
+sub() is finished
+fatal error: all goroutines are asleep - deadlock!
+
+goroutine 1 [chan receive]:
+main.main()
+        /Users/tom_red/work/sytem_programming_with_go/chap4/chanel_info/main.go:16 +0xf7
+exit status 2
+```
+
+注意として、確実にチャネルがクローズされているかを確認できない  
+クローズされるとデフォルト値が返ってくるので、正常な送信の`0`かデフォルト値としての`0`か見分けがつかない
+
+チャネルはクローズしなくてもガベージコレクタで回収される。  
+テータを扱うチャネルに関しては不正値が紛れる可能性もあるのであまり、クローズはしないほうがいい
+
