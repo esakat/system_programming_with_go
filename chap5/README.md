@@ -82,3 +82,99 @@ func Open(path string, mode int, perm uint32) (fd int, err error) {
 Go言語で普通にSyscallを呼び出すと、処理時間のかかるスレッドにマーキングをして処理時間をあげる工夫がされている  
 スレッド関係の処理を行わないシステムコール呼び出しに`RawSyscall()`がある
 
+## POSIXとC言語の標準規格
+
+ここまではOS前までのシステムコール呼び出し方法、ここからはOSより先でのシステムコールの処理について
+
+### POSIXとは
+
+Portable Operating System Interfaceのこと  
+OS間で共通のシステムコールを定義して、アプリケーションの移植性を高めるためのIEEE企画
+
+システムコールを呼び出すインタフェース  
+(具体的にはC言語の関数名と引数、返り値が定義されている)
+(必ずしもシステムコールとインタフェースが1対1で結びついているわけではない)
+
+例えば、ファイル入出力はPOSIXにおいては5つのシステムコールで定義されている  
+`open()`,`read()`,`write()`,`close()`,`lseek()`
+
+### OSでのシステムコール
+
+GoではSYSCALLで終わっていた、ここから先はLinuxのソースコードを確認していく
+
+[リポジトリ](https://github.com/torvalds/linux/)
+
+fs/read_write.c#L566
+```c
+SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
+		size_t, count)
+{
+	...
+}
+```
+
+Linuxカーネルでは、writeシステムコールは上のように定義されている.  
+SYSCALL_DEFINE`x`マクロ(xには0~6の数値が入る)
+
+これを展開すると
+
+```c
+asmlinkage long sys_write(...)
+```
+
+asmlinkageは引数をCPUのレジスタ経由で渡すようにするためのフラグ
+
+通常の関数呼び出しでは、呼び出し側と呼ばれる側がスタックメモリで隣接したメモリブロックに、
+それぞれをスコープに含まれるローカル変数を格納する。
+
+システムコールにおいてはメモリの共有ができない(ユーザーモード領域とカーネル領域ではそれぞれ別々にスタックメモリが用意されている)
+
+これを解決するためにレジスタを使用している
+
+`sys_write`は`sys_call_table`配列に格納されている
+
+arch/x86/entry/common.c#L269
+```c
+__visible void do_syscall_64(struct pt_regs *regs)
+{
+	struct thread_info *ti = current_thread_info();
+	unsigned long nr = regs->orig_ax;
+	...
+	if (likely((nr & __SYSCALL_MASK) < NR_syscalls)) {
+		nr = array_index_nospec(nr & __SYSCALL_MASK, NR_syscalls);
+		// axレジスタからシステムコール番号を読みだして、
+		// 6つのレジスタを関数の引数として渡している
+		regs->ax = sys_call_table[nr](
+			regs->di, regs->si, regs->dx,
+			regs->r10, regs->r8, regs->r9);
+	}
+	...
+}
+```
+
+この後、`call do_syscall_64`が呼び出される
+これが扱うのはCPUそのもの
+
+`syscall.Write()`→`SYSCALL`→`レジスタ`→`sys_call_table`という流れになる
+
+### システムコールのモニタリング
+
+macの場合は`dtruss`コマンドでできる
+
+### エラー処理
+
+POSIXのシステムコールであるwrite()ではエラーは次のように定義されている
+
+> 成功した場合、書き込まれたバイト数が返される(ゼロは何も書き込まれなかったことを示す).
+> エラーの場合、-1を返し、errnoにエラーを示す値をセットする。
+
+errnoには数値のみ、なぜかというと、システムコールでやっているから  
+レジスタ経由、つまり数値しか扱えないのである
+
+これは低レイヤの話で、最近の言語だと例外が使われることが多い
+Nodeだと、コールバック関数、Goだとレスポンスにエラーを返すとかね
+
+## まとめ
+
+システムコールはOSしか使えないはずの機能を一般的なアプリケーションでも使える機能だった  
+システムコールがないと、アプリケーションはほとんど何もできない(他のプロセスやリソースを使うものが使えない)ということも理解した
