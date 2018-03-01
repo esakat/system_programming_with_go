@@ -26,3 +26,14 @@ $ ls -i
 LinuxではVFSというAPIで統一的に扱えるようにしている。
 
 ## ファイル/ディレクトリを扱うGo言語の関数
+
+### ディレクトリの作成
+
+```go
+// フォルダを1階層だけ作成
+os.Mkdir("setting", 0755)
+
+// 深いフォルダを1回で作成
+os.Mkdir("setting/myapp/networksettings", 0755)
+```
+
