@@ -37,3 +37,15 @@ os.Mkdir("setting", 0755)
 os.Mkdir("setting/myapp/networksettings", 0755)
 ```
 
+### ファイルの削除/移動/リネーム
+
+`os.Remove()`=ファイルや子要素を持たないディレクトリの削除(rmとrmdirの兼用)  
+対象を全て再帰的に削除するときは、`os.RemoveAll()`を使う
+
+```go
+// ファイルや空のディレクトリの削除
+os.Remove("server.log")
+
+// ディレクトリを中身ごと削除
+os.Remove("workdir")
+```
