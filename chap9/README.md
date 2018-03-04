@@ -49,3 +49,59 @@ os.Remove("server.log")
 // ディレクトリを中身ごと削除
 os.Remove("workdir")
 ```
+
+#### 特定の長さでファイルを切り落とす os.Truncate()
+
+```go
+// 先頭100バイトできる
+os.Truncate("server.log", 100)
+
+// Truncateメソッドを利用する場合
+file, _ := os.Open("server.log")
+file.Truncate(100)
+```
+
+#### ファイルの移動 os.Rename()
+
+mvコマンドと違って、移動先ディレクトリ内での名前も指定する必要がある
+
+```go
+// リネーム
+os.Rename("old_name.txt", "new_name.txt")
+
+// 移動
+os.Rename("oldfir/file.txt", "newdir/file.txt")
+
+// 移動さきはディレクトリ✖️
+os.Rename("olddir/file.txt", "newdir/") // エラー
+```
+マウントデバイスが異なる場合も、renameはエラーがでる
+
+```go
+err := os.Rename("sample.rst", "/tmp/sample.rst")
+if err != nil {
+  panic(err)
+  // ここが実行され、コンソールにエラーが表示される
+  // rename sample.rst /tmp/sample.rst: cross-device link
+}
+```
+
+デバイスやドライバが異なる場合はファイルを開いてコピーする必要がある
+
+```go
+oldFile, err := os.Open("old_name.txt")
+if err != nil {
+  panic(err)
+}
+newFile, err := os.Create("/other_device/new_name.txt")
+if err != nil {
+  panic(err)
+}
+defer newFile.Close()
+_, err := io.Copy(newFile, oldFile)
+if err != nil {
+  panic(err)
+}
+oldFile.Close()
+os.Remove("old_name.txt")
+```
