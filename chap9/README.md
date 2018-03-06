@@ -138,3 +138,38 @@ if err == os.ErrNotExist {
 存在チェックそのものはシステムコールで提供されていない  
 多言語でも、`os.Stat()`などでファイル存在をチェックしている
 
+## OS固有のファイル属性を取得する
+
+OS固有の情報を取得するには以下のコマンド
+
+```go
+// Windows
+internalStat := info.Sys().(syscall.Win32FileAttributeData)
+
+// Windows以外
+internalStat := info.Sys().(*syscall.Stat_t)
+```
+
+## ファイルの同一性チェック
+
+`os.FileInfo`が参照するファイルが同一か判定できる関数がある   
+同一判定は内容が同じという判定ではなく、全く同じ実体を見ているかという判定
+
+```go
+if os.SameFile(fileInfo1, fileInfo2) {
+  fmt.Println("同じファイル")
+}
+```
+
+## ファイル属性の設定
+
+```go
+// ファイルのモードを変更
+os.Chmod("setting.txt", 0644)
+
+// ファイルのオーナーを変更
+os.Chown("setting.txt", os.Getuid(), os.Getgid())
+
+// ファイルの最終アクセス日時と変更日時を変更
+os.Chtimes("setting.txt", time.Now(), time.Now())
+```
