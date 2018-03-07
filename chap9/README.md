@@ -190,3 +190,7 @@ link, err := os.ReadLink("newfile-symlink")
 
 WindowsでもVista以降は気軽にシンボリックリンク作れるよ
 
+## ディレクトリ情報
+
+ディレクトリ一覧取得はosパッケージにはない
+os.Openで開いて、os.Fileのメソッドでディレクトリ内のファイル一覧を取得する
