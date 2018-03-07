@@ -173,3 +173,20 @@ os.Chown("setting.txt", os.Getuid(), os.Getgid())
 // ファイルの最終アクセス日時と変更日時を変更
 os.Chtimes("setting.txt", time.Now(), time.Now())
 ```
+
+## リンク
+
+ハードリンク、シンボリックリンクの作成もGoで可能
+```go
+// ハードリンク
+os.Link("oldfile", "newfile")
+
+// シンボリックリンク
+os.Symlink("oldfile", "newfile")
+
+// シンボリックリンクのリンク先を入手
+link, err := os.ReadLink("newfile-symlink")
+```
+
+WindowsでもVista以降は気軽にシンボリックリンク作れるよ
+
