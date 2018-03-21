@@ -261,3 +261,20 @@ func Clean2(path string) string {
   return filepath.Clean(path)
 }
 ```
+
+## ファイル名のパターンにマッチするファイル抽出
+
+Go言語でファイル名をパターンで探すのは2つの関数がある
+
+```Go
+fmt.Println(filepath.Match("image-*.png", "image-100.png"))
+```
+
+```Go
+files, err := filepath.Glob("./*.png")
+if err != nil {
+  panic(err)
+}
+fmt.Println(files)
+```
+
