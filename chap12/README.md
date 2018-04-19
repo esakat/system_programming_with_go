@@ -26,4 +26,13 @@
 $ man signal
 ```
 
+SIGKILLとSIGSTOPの2つはハンドルできないので注意
+
+```bash
+// プロセスID指定でKILL
+$ kill -KILL 11111
+// プロセス名を指定でSTOP
+$ pkill -STOP ./sample
+↓
+$ fg ./sample //これでまた再開できる
 ```
