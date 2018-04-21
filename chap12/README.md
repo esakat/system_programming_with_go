@@ -26,6 +26,8 @@
 $ man signal
 ```
 
+### ハンドルできないシグナル
+
 SIGKILLとSIGSTOPの2つはハンドルできないので注意
 
 ```bash
@@ -36,3 +38,28 @@ $ pkill -STOP ./sample
 ↓
 $ fg ./sample //これでまた再開できる
 ```
+
+### サーバーでハンドルするシグナル
+
+`SIGTERN`: killコマンドなどがデフォで送るシグナル、プロセスの停止
+`SIGHUP`: 設定ファイルの再読み込みなどに使われる
+
+### コンソールでハンドルするシグナル
+
+`SIGINT`: `Ctrl+C`で送られるシグナル
+`SIGQUIT`: `Ctrl+\`で送られるシグナル
+`SIGTSTP`: `Ctrl+Z`で送られるシグナル
+`SIGCONT`: バックグラウンド動作から戻させる指令
+`SIGWINCH`: ウィンドウサイズ変更
+`SIGHUP`: 模擬ターミナルから切断されるときに呼ばれるシグナル
+
+## Go言語でのシグナル
+
+```go
+var {
+  Interrupt Signal = syscall.SIGINT
+  kill      Signal = syscall.SIGKILL
+}
+```
+これらが定義されている
+
