@@ -16,6 +16,7 @@ func main() {
 	}
 	pool.Put("removed 1")
 	pool.Put("removed 2")
+	// GC呼ぶと消える
 	runtime.GC()
 	fmt.Println(pool.Get())
 	fmt.Println(pool.Get())
