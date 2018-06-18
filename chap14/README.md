@@ -105,3 +105,29 @@ GoだとチャネルでProducerとConsumerを使えば実現できる
 
 プロセスをまたいでやる場合はMQを使うのが一般的
 
+## 開始順で処理
+
+チャネルでFIFOを実現できる
+
+```go
+
+// チャネルに結果が投入された順に処理される
+func writeToConn(responses chan *http.Response, conn net.Conn) {
+  defer conn.Close()
+  // 順番に取り出す
+  for response := range responses {
+    response.Write(conn)
+  }
+}
+
+// チャネルにチャネルを入れた順で処理される
+func writeToConn(sessionResponses chan chan *http.Response, conn net.Conn) {
+  defer conn.Close()
+  // 順番に取り出し
+  for sessionResponse := range sessionResponses {
+    // 選択された仕事が終わるまでまつ
+    response := <-sessionResponse
+    response.Write(conn)
+  }
+}
+```
