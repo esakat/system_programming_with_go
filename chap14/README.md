@@ -71,4 +71,23 @@ GPUとかに使われているらしい
 * イベントの流れを定義
 * 自立した複数のシステムで協調動作
 
+## 同期処理を非同期に
+
+重い処理をタスクに分ける(goroutineで非同期化)
+
+```go
+inputs := make(chan []byte)
+
+go func() {
+  a, _ := ioutil.ReadFile("a.txt")
+  inputs<-a
+}()
+
+go func() {
+  b, _ := ioutil.ReadFile("b.txt")
+  inputs<-b
+}()
+```
+
+## 非同期処理を同期に
 
