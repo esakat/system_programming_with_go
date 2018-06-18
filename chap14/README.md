@@ -108,6 +108,7 @@ GoだとチャネルでProducerとConsumerを使えば実現できる
 ## 開始順で処理
 
 チャネルでFIFOを実現できる
+チャネルのチャネルにすると早く開始したものから順番に処理できる
 
 ```go
 
@@ -131,3 +132,18 @@ func writeToConn(sessionResponses chan chan *http.Response, conn net.Conn) {
   }
 }
 ```
+
+## back pressure
+
+メールボックスが溢れそうな際の制御などに使われる
+タスクが詰まりそうになったら緩和する制御
+
+Goの場合はgoroutineの入力にバッファつきchanを使うと実現できる
+
+```go
+tasks := make(chan string, 10)
+```
+
+## 並列forループ
+
+forループ内で、goroutineを使えば全て並列化できる
