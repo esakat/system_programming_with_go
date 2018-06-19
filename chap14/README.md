@@ -147,3 +147,14 @@ tasks := make(chan string, 10)
 ## 並列forループ
 
 forループ内で、goroutineを使えば全て並列化できる
+
+## ワーカープール
+
+決まった数のgoroutineでタスクを消化  
+
+生成コストの問題を解決する
+事前にワーカーをプールしておき、それを再利用
+
+goroutineでは、CPUのコア数以上にしても意味ないので
+CPU数分のワーカーをgoroutineを作っておくと良い
+
